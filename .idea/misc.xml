@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/activity_all_messages.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/activity_all_requests.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/activity_available_requests.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/activity_base.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/activity_forgotpassword.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/activity_home_page.xml" value="0.16666666666666666" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/activity_login.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/activity_main.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/activity_main2.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/activity_profile.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/activity_register.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/activity_select_type_of_user.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/drawer_header.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/drawer_toolbar.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/message_content.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/profile_content.xml" value="0.17552083333333332" />
+        <entry key="..\:/Users/moola/Desktop/SurrogateShopper/SurrogateShopper/app/src/main/res/layout/request_content.xml" value="0.17552083333333332" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>

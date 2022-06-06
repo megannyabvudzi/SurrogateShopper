@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="General">
+        <menu>
+            <item
+                android:id="@+id/home"
+                android:icon="@drawable/ic_home_black_24dp"
+                android:title="Home" />
+            <item
+                android:id="@+id/profile"
+                android:icon="@drawable/ic_person_black_24dp"
+                android:title="Profile" />
+        </menu>
+    </item>
+
+    <item android:title="Requests">
+        <menu>
+            <item
+                android:id="@+id/availableRequests"
+                android:icon="@drawable/ic_priority_high_black_24dp"
+                android:title="Available Requests" />
+            <item
+                android:id="@+id/completedRequests"
+                android:icon="@drawable/ic_done_all_black_24dp"
+                android:title="Completed Requests" />
+            <item
+                android:id="@+id/MakeARequest"
+                android:icon="@drawable/ic_add_black_24dp"
+                android:title="Make a Request" />
+            <item
+                android:id="@+id/AllYourRequests"
+                android:icon="@drawable/ic_check_black_24dp"
+                android:title="All your Requests" />
+        </menu>
+    </item>
+    <item android:title="Messages">
+        <menu>
+            <item
+                android:id="@+id/NewMessage"
+                android:icon="@drawable/ic_add_box_black_24dp"
+                android:title="Post Messages" />
+
+            <item
+                android:id="@+id/AllMessages"
+                android:icon="@drawable/ic_message_black_24dp"
+                android:title="All Messages" />
+        </menu>
+    </item>
+
+</menu>
