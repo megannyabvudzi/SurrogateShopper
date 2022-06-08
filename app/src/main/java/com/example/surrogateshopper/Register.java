@@ -1,33 +1,45 @@
 package com.example.surrogateshopper;
 
-import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
+
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+
 import android.location.LocationManager;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
+import android.os.Looper;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -39,162 +51,232 @@ import okhttp3.Response;
 
 public class Register extends AppCompatActivity {
 
-    private FusedLocationProviderClient client;
-    double longitude;
-    double latitude;
-    Geocoder geocoder;
-    List<Address> addresses ;
-    LocationManager locationManager;
-    private static final int REQUEST_LOCATION = 1;
-    String fullAddress;
-    String username;
-    int x;
-    String type;
-    String url;
 
+    EditText username, password;
+    String Username, Password;
+    String type;
+    String fullAddress;
+    String url;
+    int x;
+    Button regbutton;
+    private TextView AddressText;
+    private Button LocationButton;
+    private LocationRequest locationRequest;
+    final String registerURL = "https://lamp.ms.wits.ac.za/~s2430972/registerusers.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        ActivityCompat.requestPermissions( this,
-                new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
-        username = getIntent().getExtras().getString("username");
+        username = (EditText) findViewById(R.id.userName);
+        password = (EditText) findViewById(R.id.passWord);
+        regbutton = (Button) findViewById(R.id.buttonReg);
 
-        CheckBox v =(CheckBox)findViewById(R.id.Volunteer);
-        CheckBox ar =(CheckBox)findViewById(R.id.AtRisk);
-        v.setOnClickListener(new View.OnClickListener() {
+        AddressText = findViewById(R.id.addressText);
+        LocationButton = findViewById(R.id.locationButton);
+
+        locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(5000);
+        locationRequest.setFastestInterval(2000);
+
+        regbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    OnGPS();
-                } else {
-                    getLocation();
-                }
-            }
-        });
-        ar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    OnGPS();
-                } else {
-                    getLocation();
-                }
+                String Name= username.getText().toString();
+                String Password= password.getText().toString();
+
+                new registerUser().execute(Name, Password);
+                getCurrentLocation();
+
             }
         });
     }
 
-    public void doRegister(View v) {
-        EditText Username = (EditText)findViewById(R.id.Username);
-        EditText Password = (EditText)findViewById(R.id.Password);
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        final String username = Username.getText().toString();
-        String password = Password.getText().toString();
+        if (requestCode == 1){
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
 
-        OkHttpClient client = new OkHttpClient();
-        String url = "https://lamp.ms.wits.ac.za/~s2430972/users.php";
+                if (isGPSEnabled()) {
 
-        RequestBody formBody = new FormBody.Builder()
-                .add("Username",username)
-                .add("Password",password)
-                .build();
-        Request request = new Request.Builder()
-                .url(url)
-                .post(formBody)
-                .build();
-        client.newCall(request).enqueue(new Callback() {
+                    getCurrentLocation();
+
+                }else {
+
+                    turnOnGPS();
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 2) {
+            if (resultCode == Activity.RESULT_OK) {
+
+                getCurrentLocation();
+            }
+        }
+    }
+
+    private void getCurrentLocation() {
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ActivityCompat.checkSelfPermission(Register.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+                if (isGPSEnabled()) {
+
+                    LocationServices.getFusedLocationProviderClient(Register.this)
+                            .requestLocationUpdates(locationRequest, new LocationCallback() {
+                                @Override
+                                public void onLocationResult(@NonNull LocationResult locationResult) {
+                                    super.onLocationResult(locationResult);
+
+                                    LocationServices.getFusedLocationProviderClient(Register.this)
+                                            .removeLocationUpdates(this);
+
+                                    if (locationResult != null && locationResult.getLocations().size() >0){
+
+                                        int index = locationResult.getLocations().size() - 1;
+                                        double latitude = locationResult.getLocations().get(index).getLatitude();
+                                        double longitude = locationResult.getLocations().get(index).getLongitude();
+
+                                        AddressText.setText("Latitude: "+ latitude + "\n" + "Longitude: "+ longitude);
+                                    }
+                                }
+                            }, Looper.getMainLooper());
+
+                } else {
+                    turnOnGPS();
+                }
+
+            } else {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            }
+        }
+    }
+
+    private void turnOnGPS() {
+
+
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+        builder.setAlwaysShow(true);
+
+        Task<LocationSettingsResponse> result = LocationServices.getSettingsClient(getApplicationContext())
+                .checkLocationSettings(builder.build());
+
+        result.addOnCompleteListener(new OnCompleteListener<LocationSettingsResponse>() {
             @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+            public void onComplete(@NonNull Task<LocationSettingsResponse> task) {
+
+                try {
+                    LocationSettingsResponse response = task.getResult(ApiException.class);
+                    Toast.makeText(Register.this, "GPS is already tured on", Toast.LENGTH_SHORT).show();
+
+                } catch (ApiException e) {
+
+                    switch (e.getStatusCode()) {
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+
+                            try {
+                                ResolvableApiException resolvableApiException = (ResolvableApiException) e;
+                                resolvableApiException.startResolutionForResult(Register.this, 2);
+                            } catch (IntentSender.SendIntentException ex) {
+                                ex.printStackTrace();
+                            }
+                            break;
+
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            //Device does not have location
+                            break;
+                    }
+                }
+            }
+        });
+
+    }
+
+    private boolean isGPSEnabled() {
+        LocationManager locationManager = null;
+        boolean isEnabled = false;
+
+        if (locationManager == null) {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        }
+
+        isEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        return isEnabled;
+
+    }
+
+
+    public class registerUser extends AsyncTask<String,Void, String>{
+        @Override
+        protected String doInBackground(String... strings) {
+            String Name= strings[0];
+            String Password=strings[1];
+            String finalurl= registerURL +"?user_name="+Name+
+                    "&user_password="+Password;
+
+            OkHttpClient okHttpClient=new OkHttpClient();
+            Request request = new Request.Builder()
+                    .url(finalurl)
+                    .get()
+                    .build();
+
+
+            //checking server response and inserting data
+
+            Response response= null;
+
+            try {
+                response= okHttpClient.newCall(request).execute();
+                if(response.isSuccessful()){
+                    String result= response.body().string();
+                    showToast(result);
+
+                    if(result.equalsIgnoreCase("User registered successfully")){
+                        showToast("Successful Registration.Please Login");
+                        Intent i= new Intent(Register.this, HomePage.class);
+                        startActivity(i);
+                        finish();
+                    }
+
+                    else if (result.equalsIgnoreCase("User already exists")){
+                        showToast("User Already Exist");
+
+                    }
+                    else{
+                        showToast("Registration Failed. Try Again");
+                    }
+                }
+
+            }
+            catch (Exception e){
                 e.printStackTrace();
             }
 
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                if(response.isSuccessful()){
-                    final TextView reg = (TextView)findViewById(R.id.isRegistered);
-                    final String resp = response.body().string();
-                    if(resp.trim().equalsIgnoreCase("False")){
-                        Register.this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                reg.setVisibility(View.VISIBLE);
-                                reg.setText("Existing Account");
-                            }
-                        });
-                    }
-                    else if(resp.trim().equalsIgnoreCase("True")){
-                        Register.this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Intent i = new Intent(Register.this, Register.class);
-                                i.putExtra("username",username);
-                                startActivity(i);
-                            }
-                        });
 
-                    }
-                }
+            return null;
+        }
+    }
+
+    public void showToast(final String Text){
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(Register.this, Text, Toast.LENGTH_LONG).show();
             }
         });
-    }
-
-    public void GetLocation(){
-        TextView add = (TextView)findViewById(R.id.Location);
-        geocoder = new Geocoder(this, Locale.getDefault());
-        try {
-            System.out.println(latitude);
-            System.out.println(longitude);
-            addresses =  geocoder.getFromLocation(latitude, longitude,1);
-            String address = addresses.get(0).getAddressLine(0);
-            String area = addresses.get(0).getLocality();
-            String city = addresses.get(0).getAdminArea();
-
-            fullAddress = address + ", " + area + ", " + city;
-            add.setText("");
-            add.setText(fullAddress);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-    private void OnGPS() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Enable GPS").setCancelable(false).setPositiveButton("Yes", new  DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-            }
-        }).setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-        final AlertDialog alertDialog = builder.create();
-        alertDialog.show();
-    }
-    private void getLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                Register.this,Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                Register.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
-        } else {
-            Location locationGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (locationGPS != null) {
-                double lat = locationGPS.getLatitude();
-                double longi = locationGPS.getLongitude();
-                latitude = lat;
-                longitude = longi;
-                GetLocation();
-            } else {
-                Toast.makeText(this, "Can't fine you :(", Toast.LENGTH_SHORT).show();
-            }
-        }
     }
 
     public void confirm(View v){
@@ -214,7 +296,7 @@ public class Register extends AppCompatActivity {
             url ="https://lamp.ms.wits.ac.za/~s2430972/volunteers.php";
             OkHttpClient client = new OkHttpClient();
             RequestBody Formbody = new FormBody.Builder()
-                    .add("username", username)
+                    .add("username", Username)
                     .add("type", type)
                     .add("address", fullAddress)
                     .build();
@@ -236,7 +318,7 @@ public class Register extends AppCompatActivity {
                             @Override
                             public void run() {
                                 Intent intent = new Intent(Register.this, HomePage.class);
-                                intent.putExtra("username", username);
+                                intent.putExtra("username", Username);
                                 intent.putExtra("type",type);
                                 startActivity(intent);
                             }
@@ -253,7 +335,7 @@ public class Register extends AppCompatActivity {
             url ="https://lamp.ms.wits.ac.za/~s2430972/atrisk.php";
             OkHttpClient client = new OkHttpClient();
             RequestBody Formbody = new FormBody.Builder()
-                    .add("email", username)
+                    .add("username", Username)
                     .add("type", type)
                     .add("address", fullAddress)
                     .build();
@@ -275,18 +357,20 @@ public class Register extends AppCompatActivity {
                             @Override
                             public void run() {
                                 Intent intent = new Intent(Register.this, HomePage.class);
-                                intent.putExtra("email", username);
+                                intent.putExtra("username", Username);
                                 intent.putExtra("type",type);
                                 startActivity(intent);
                             }
                         });
                     } else if (result.trim().equalsIgnoreCase("Failed")) {
-                        System.out.println("Failed to insert");
+                        System.out.println("insert failed");
                     }
                 }
             });
         }
     }
 
-}
 
+
+
+}
